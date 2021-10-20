@@ -255,8 +255,6 @@ class AmazonScraper {
      * Main loop that collects data
      */
     async mainLoop() {
-        console.log('this');
-        console.log(this);
         return new Promise((resolve, reject) => {
             forEachLimit(
                 Array.from({ length: this.asyncPage }, (_, k) => k + 1),

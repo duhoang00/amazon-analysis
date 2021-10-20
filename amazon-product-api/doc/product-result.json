@@ -1,0 +1,14 @@
+ {
+      position: [Object],
+      asin: 'B06XGQPV88',
+      price: [Object],
+      reviews: [Object],
+      url: 'https://www.amazon.com/dp/B06XGQPV88',
+      score: '2980.80',
+      sponsored: false,
+      amazonChoice: false,
+      bestSeller: false,
+      amazonPrime: false,
+      title: 'Fantom Drives 2TB Xbox One Hard Drive Upgrade - Easy Snap-On with 3 USB Ports - Compatible with Original Xbox One Only (XB...',
+      thumbnail: 'https://m.media-amazon.com/images/I/61oVTeqGpHL._AC_UY218_.jpg'
+    }

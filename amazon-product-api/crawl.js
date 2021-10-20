@@ -2,14 +2,14 @@ const Crawler = require('./lib/Amazon');
 const { geo, defaultItemLimit } = require('./lib/constant');
 
 const INIT_OPTIONS = {
-    bulk: true,
+    bulk: false,
     number: defaultItemLimit,
     filetype: '',
     rating: [1, 5],
     page: 1,
     category: '',
     cookie: '',
-    asyncTasks: 5,
+    asyncTasks: 1,
     sponsored: false,
     category: 'aps',
     cli: false,
@@ -24,6 +24,8 @@ const INIT_OPTIONS = {
         filterByStar: '',
         formatType: 'all_formats',
     },
+    randomUa: true,
+    cli: true,
 };
 
 const productCrawlOptions = () => {
@@ -40,23 +42,28 @@ const reviewCrawlOptions = () => {
     options.geo = geo['US'];
     options.scrapeType = 'reviews';
     options.asyncTasks = 1;
-    options.keyword = 'xbox-one';
+    options.asin = 'B01GW3H3U8';
     return options;
 };
 
 const startCrawler = async () => {
     try {
-        // console.log('...Crawling product');
-        // const productOptions = productCrawlOptions();
-        // console.log(productOptions);
-        // const productData = await new Crawler(productOptions).startScraper();
-        // console.log(productData);
+        console.log('...Crawling product');
 
-        console.log('...Crawling reviews');
-        const reviewOptions = reviewCrawlOptions();
-        console.log(reviewOptions);
-        const reviewData = await new Crawler(reviewOptions).startScraper();
-        console.log(reviewData);
+        const productOptions = productCrawlOptions();
+        console.log('productOptions');
+        console.log(productOptions);
+        const productData = await new Crawler(productOptions).startScraper();
+        console.log('productData');
+        console.log(productData);
+
+        // console.log('...Crawling reviews');
+        // const reviewOptions = reviewCrawlOptions();
+        // console.log('reviewOptions');
+        // console.log(reviewOptions);
+        // const reviewData = await new Crawler(reviewOptions).startScraper();
+        // console.log('reviewData');
+        // console.log(reviewData);
     } catch (e) {
         console.log(e);
     }

@@ -5,7 +5,7 @@ module.exports = {
         product: 1000,
         reviews: 2000,
     },
-    defaultItemLimit: 15,
+    defaultItemLimit: 1,
     reviewFilter: {
         sortBy: {
             recent: 'recent',

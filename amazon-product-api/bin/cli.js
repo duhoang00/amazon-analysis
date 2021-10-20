@@ -18,11 +18,13 @@ const startScraper = async (argv) => {
             case 'products':
             case 'reviews':
                 if (!argv.filetype) {
+                    console.log('review');
                     console.log(JSON.stringify(data));
                 }
                 break;
             case 'asin':
                 if (!argv.filetype) {
+                    console.log('asin');
                     console.log(data.result[0]);
                 }
                 break;
