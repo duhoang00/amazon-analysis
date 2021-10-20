@@ -1,0 +1,33 @@
+{
+  totalProducts: '79051',
+  category: 'aps',
+  result: [
+    {
+      position: [Object],
+      asin: 'B01BV13S7S',
+      price: [Object],
+      reviews: [Object],
+      url: 'https://www.amazon.com/dp/B01BV13S7S',
+      score: '233256.00',
+      sponsored: false,
+      amazonChoice: false,
+      bestSeller: false,
+      amazonPrime: false,
+      title: 'Seagate (STEA4000402) Game Drive for Xbox 4TB External Hard Drive Portable HDD – Designed for Xbox One ,Green',
+      thumbnail: 'https://m.media-amazon.com/images/I/81dGAGz+BQL._AC_UY218_.jpg'
+    },
+    {
+      position: [Object],
+      asin: 'B07FFN4H9G',
+      price: [Object],
+      reviews: [Object],
+      url: 'https://www.amazon.com/dp/B07FFN4H9G',
+      score: '23044.50',
+      sponsored: false,
+      amazonChoice: false,
+      bestSeller: true,
+      amazonPrime: false,
+      title: 'Power Supply Brick Power Adapter for Xbox One, [Upgraded Version] UKor Xbox AC Adapter Replacement Charger Power Cord Cabl...',
+      thumbnail: 'https://m.media-amazon.com/images/I/41mgtu12+HL._AC_UY218_.jpg'
+    },
+}
