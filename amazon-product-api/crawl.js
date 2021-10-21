@@ -12,20 +12,20 @@ const INIT_OPTIONS = {
     asyncTasks: 1,
     sponsored: false,
     category: 'aps',
-    cli: false,
+    cli: true,
     sort: false,
     discount: false,
     reviewFilter: {
         // Sort by recent/top reviews
         sortBy: 'recent',
         // Show only reviews with verified purchase
-        verifiedPurchaseOnly: false,
+        verifiedPurchaseOnly: true,
         // Show only reviews with specific rating or positive/critical
         filterByStar: '',
         formatType: 'all_formats',
     },
     randomUa: true,
-    cli: true,
+    filetype: 'csv',
 };
 
 const productCrawlOptions = () => {
