@@ -32,7 +32,6 @@ const productCrawlOptions = () => {
     let options = { ...INIT_OPTIONS };
     options.geo = geo['US'];
     options.scrapeType = 'products';
-    options.asyncTasks = 1;
     options.keyword = 'xbox-one';
     return options;
 };
@@ -41,7 +40,6 @@ const reviewCrawlOptions = () => {
     let options = { ...INIT_OPTIONS };
     options.geo = geo['US'];
     options.scrapeType = 'reviews';
-    options.asyncTasks = 1;
     options.asin = 'B01GW3H3U8';
     return options;
 };
