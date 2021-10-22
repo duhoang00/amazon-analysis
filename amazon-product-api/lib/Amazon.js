@@ -232,17 +232,11 @@ class AmazonScraper {
             spinner.start();
         }
 
-        console.log(': runnning main loop');
         await this.mainLoop();
 
-        console.log(': sorting and filtering result');
         this.sortAndFilterResult();
 
-        console.log('Saving to file');
         await this.saveResultToFile();
-
-        console.log(this.fileType);
-        console.log(this.cli);
 
         if (this.cli) {
             spinner.stop();
