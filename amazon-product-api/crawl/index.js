@@ -32,12 +32,10 @@ const startCrawler = async () => {
     try {
         let options = { ...INIT_OPTIONS };
         options.geo = geo['US'];
-        options.scrapeType = 'products';
+        options.scrapeType = 'products-reviews';
         options.keyword = 'xbox-one';
 
         const data = await new Crawler(options).startScraper();
-
-        console.log(data);
     } catch (e) {
         console.log(e);
     }

@@ -36,6 +36,7 @@ class AmazonScraper {
         asyncTasks,
         reviewFilter,
         referer,
+        temp_asin,
     }) {
         this.asyncTasks = asyncTasks;
         this.asyncPage = 1;
@@ -71,6 +72,7 @@ class AmazonScraper {
         this.initTime = Date.now();
         this.ua = ua || 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.113 Safari/537.36';
         this.reviewFilter = reviewFilter;
+        this.temp_asin = temp_asin;
     }
 
     /**
@@ -204,9 +206,19 @@ class AmazonScraper {
                 throw new Error(`Wow.... slow down cowboy. Maximum you can get is ${CONST.limit.reviews} reviews`);
             }
         }
-        if (this.scrapeType === 'asin') {
-            if (!this.asin) {
-                throw new Error('ASIN is missing');
+        if (this.scrapeType === 'products-reviews') {
+            this.asyncPage = Math.ceil(this.number / 20);
+            if (!this.keyword) {
+                throw new Error('Keyword is missing');
+            }
+            if (this.number > CONST.limit.product) {
+                throw new Error(`Wow.... slow down cowboy. Maximum you can get is ${CONST.limit.product} products`);
+            }
+            if (this.number > CONST.limit.reviews) {
+                throw new Error(`Wow.... slow down cowboy. Maximum you can get is ${CONST.limit.reviews} reviews`);
+            }
+            if (typeof this.sponsored !== 'boolean') {
+                throw new Error('Sponsored can only be {true} or {false}');
             }
         }
         if (!Array.isArray(this.rating)) {
@@ -247,6 +259,9 @@ class AmazonScraper {
         return {
             ...(this.scrapeType === 'products' ? { totalProducts: this.totalProducts, category: this.productSearchCategory } : {}),
             ...(this.scrapeType === 'reviews' ? { ...this.reviewMetadata } : {}),
+            ...(this.scrapeType === 'products-reviews'
+                ? { totalProducts: this.totalProducts, category: this.productSearchCategory, ...this.reviewMetadata }
+                : {}),
             result: this.collector,
         };
     }
@@ -255,6 +270,7 @@ class AmazonScraper {
      * Main loop that collects data
      */
     async mainLoop() {
+        console.log('\n -running main loop');
         return new Promise((resolve, reject) => {
             forEachLimit(
                 Array.from({ length: this.asyncPage }, (_, k) => k + 1),
@@ -275,6 +291,11 @@ class AmazonScraper {
                     }
                     if (this.scrapeType === 'reviews') {
                         this.grabReviews(body);
+                    }
+                    if (this.scrapeType === 'products-reviews') {
+                        console.log('\n scrape products-reviews');
+                        const productsBody = await this.buildProductsRequest(this.bulk ? item : this.searchPage);
+                        this.grabProductsReviews(productsBody, item);
                     }
                     if (!this.bulk) {
                         throw new Error('Done');
@@ -298,6 +319,8 @@ class AmazonScraper {
             case 'reviews':
             case 'asin':
                 return `${this.scrapeType}(${this.asin})_${this.initTime}`;
+            case 'products-reviews':
+                return `${this.scrapeType}_${this.initTime}`;
             default:
                 throw new Error(`Unknow scraping type: ${this.scrapeType}`);
         }
@@ -335,7 +358,7 @@ class AmazonScraper {
                 this.collector.sort((a, b) => b.rating - a.rating);
             }
         }
-        if (this.scrapeType === 'products') {
+        if (this.scrapeType === 'products' || this.scrapeType === 'products-reviews') {
             this.collector.sort((a, b) => a.position.global_position - b.position.global_position);
             this.collector.forEach((item, index) => {
                 item.position.global_position = index += 1;
@@ -372,6 +395,19 @@ class AmazonScraper {
                 return '';
         }
     }
+
+    get setRequestProductEndpoint() {
+        return 's';
+    }
+
+    get setRequestReviewEndpoint() {
+        return `product-reviews/${this.temp_asin}/ref=cm_cr_arp_d_viewopt_srt?formatType=${
+            CONST.reviewFilter.formatType[this.reviewFilter.formatType]
+        }&sortBy=${CONST.reviewFilter.sortBy[this.reviewFilter.sortBy] ? CONST.reviewFilter.sortBy[this.reviewFilter.sortBy] : ''}${
+            this.reviewFilter.verifiedPurchaseOnly ? '&reviewerType=avp_only_reviews' : ''
+        }${this.reviewFilter.filterByStar ? `&filterByStar=${CONST.reviewFilter.filterByStar[this.reviewFilter.filterByStar]}` : ''}`;
+    }
+
     /**
      * Create request
      */
@@ -397,6 +433,184 @@ class AmazonScraper {
         } catch (error) {
             throw error.message;
         }
+    }
+
+    async buildProductsRequest(page) {
+        console.log('buildProductsRequest');
+        const options = {
+            method: 'GET',
+            uri: this.setRequestProductEndpoint,
+            qs: {
+                ...(this.scrapeType === 'products-reviews'
+                    ? {
+                          k: this.keyword,
+                          ...(this.productSearchCategory ? { i: this.productSearchCategory } : {}),
+                          ...(page > 1 ? { page, ref: `sr_pg_${page}` } : {}),
+                      }
+                    : {}),
+                ...{},
+            },
+        };
+
+        try {
+            const response = await this.httpRequest(options);
+            return response.body;
+        } catch (error) {
+            throw error.message;
+        }
+    }
+
+    async buildReviewsRequest(page) {
+        const options = {
+            method: 'GET',
+            uri: this.setRequestReviewEndpoint,
+            qs: {
+                ...(this.scrapeType === 'products-reviews' ? { ...(page > 1 ? { pageNumber: page } : {}) } : {}),
+                ...{},
+            },
+        };
+
+        try {
+            const response = await this.httpRequest(options);
+            return response.body;
+        } catch (error) {
+            throw error.message;
+        }
+    }
+
+    /**
+     * Collect products from html response then collect reviews of each product(asin)
+     * @param {*} body
+     */
+    grabProductsReviews(productsBody, p) {
+        console.log('\n grabProductsReviews');
+        const $ = cheerio.load(productsBody.replace(/\s\s+/g, '').replace(/\n/g, ''));
+        let productList = $('div[data-index]');
+        const scrapingResult = {};
+
+        console.log(`productList length ${productList.length}`);
+
+        let position = 0;
+        for (let i = 0; i < productList.length; i++) {
+            if (this.cli) {
+                spinner.text = `Found ${this.collector.length + productList.length} products`;
+            }
+
+            const asin = productList[i].attribs['data-asin'];
+
+            if (!asin) {
+                continue;
+            }
+
+            console.log(`asin: ${asin}`);
+
+            scrapingResult[asin] = {
+                position: {
+                    page: p,
+                    position: (position += 1),
+                    global_position: `${p}${i}`,
+                },
+                asin,
+                price: {
+                    discounted: false,
+                    current_price: 0,
+                    currency: this.geo.currency,
+                    before_price: 0,
+                    savings_amount: 0,
+                    savings_percent: 0,
+                },
+                reviews: {
+                    total_reviews: 0,
+                    rating: 0,
+                },
+                review: {
+                    id: '',
+                    review_data: '',
+                    rating: '',
+                    title: '',
+                    review: '',
+                },
+                url: `${this.mainHost}/dp/${asin}`,
+                score: 0,
+                sponsored: false,
+                amazonChoice: false,
+                bestSeller: false,
+                amazonPrime: false,
+            };
+        }
+
+        for (let key in scrapingResult) {
+            try {
+                const priceSearch = $(`div[data-asin=${key}] span[data-a-size="l"]`)[0] || $(`div[data-asin=${key}] span[data-a-size="m"]`)[0];
+                const discountSearch = $(`div[data-asin=${key}] span[data-a-strike="true"]`)[0];
+                const ratingSearch = $(`div[data-asin=${key}] .a-icon-star-small`)[0];
+                const titleThumbnailSearch = $(`div[data-asin=${key}] [data-image-source-density="1"]`)[0];
+                const amazonChoice = $(`div[data-asin=${key}] span[id="${key}-amazons-choice"]`).text();
+                const bestSeller = $(`div[data-asin=${key}] span[id="${key}-best-seller"]`).text();
+                const amazonPrime = $(`div[data-asin=${key}] .s-prime`)[0];
+
+                if (priceSearch) {
+                    scrapingResult[key].price.current_price = this.geo.price_format($(priceSearch.children[0]).text());
+                }
+
+                if (amazonChoice) {
+                    scrapingResult[key].amazonChoice = true;
+                }
+                if (bestSeller) {
+                    scrapingResult[key].bestSeller = true;
+                }
+                if (amazonPrime) {
+                    scrapingResult[key].amazonPrime = true;
+                }
+
+                if (discountSearch) {
+                    scrapingResult[key].price.before_price = this.geo.price_format($(discountSearch.children[0]).text());
+
+                    scrapingResult[key].price.discounted = true;
+
+                    const savings = scrapingResult[key].price.before_price - scrapingResult[key].price.current_price;
+                    if (savings <= 0) {
+                        scrapingResult[key].price.discounted = false;
+
+                        scrapingResult[key].price.before_price = 0;
+                    } else {
+                        scrapingResult[key].price.savings_amount = +(
+                            scrapingResult[key].price.before_price - scrapingResult[key].price.current_price
+                        ).toFixed(2);
+                        scrapingResult[key].price.savings_percent = +(
+                            (100 / scrapingResult[key].price.before_price) *
+                            scrapingResult[key].price.savings_amount
+                        ).toFixed(2);
+                    }
+                }
+
+                if (ratingSearch) {
+                    scrapingResult[key].reviews.rating = parseFloat(ratingSearch.children[0].children[0].data);
+
+                    scrapingResult[key].reviews.total_reviews = parseInt(
+                        ratingSearch.parent.parent.parent.next.attribs['aria-label'].replace(/\,/g, ''),
+                    );
+
+                    scrapingResult[key].score = parseFloat(scrapingResult[key].reviews.rating * scrapingResult[key].reviews.total_reviews).toFixed(2);
+                }
+
+                if (titleThumbnailSearch) {
+                    scrapingResult[key].title = titleThumbnailSearch.attribs.alt;
+
+                    scrapingResult[key].thumbnail = titleThumbnailSearch.attribs.src;
+                }
+            } catch (err) {
+                continue;
+            }
+        }
+
+        for (let key in scrapingResult) {
+            this.collector.push(scrapingResult[key]);
+        }
+        if (productList.length < 10) {
+            throw new Error('No more products');
+        }
+        return;
     }
 
     /**
