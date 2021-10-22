@@ -482,7 +482,7 @@ class AmazonScraper {
      * Collect products from html response then collect reviews of each product(asin)
      * @param {*} body
      */
-    grabProductsReviews(productsBody, p) {
+    async grabProductsReviews(productsBody, p) {
         console.log('\n grabProductsReviews');
         const $ = cheerio.load(productsBody.replace(/\s\s+/g, '').replace(/\n/g, ''));
         let productList = $('div[data-index]');
@@ -503,6 +503,34 @@ class AmazonScraper {
             }
 
             console.log(`asin: ${asin}`);
+            this.temp_asin = asin;
+            const bodyReviews = await this.buildReviewsRequest(this.bulk ? item : this.searchPage);
+            const reviewsData = await this.grabEachProductReviews(bodyReviews);
+
+            let count = 2;
+            for (let reviewId in reviewsData) {
+                if (count === 0) {
+                    return;
+                }
+                console.log(reviewId);
+                if (reviewsData[reviewId]) {
+                    console.log(reviewsData[reviewId]);
+                    scrapingResult[reviewId] = await {
+                        review: {
+                            id: reviewsData[reviewId].id,
+                            review_data: reviewsData[reviewId].review_data,
+                            rating: reviewsData[reviewId].rating,
+                            title: reviewsData[reviewId].title,
+                            review: reviewsData[reviewId].review,
+                            verified_purchase: reviewsData[reviewId].verified_purchase,
+                        },
+                    };
+                }
+                count--;
+            }
+
+            console.log('scrapingResult');
+            console.log(scrapingResult);
 
             scrapingResult[asin] = {
                 position: {
@@ -605,12 +633,143 @@ class AmazonScraper {
         }
 
         for (let key in scrapingResult) {
+            console.log('scrapingResult');
+            console.log(scrapingResult);
             this.collector.push(scrapingResult[key]);
         }
         if (productList.length < 10) {
             throw new Error('No more products');
         }
         return;
+    }
+
+    grabEachProductReviews(body) {
+        const $ = cheerio.load(body.replace(/\s\s+/g, '').replace(/\n/g, ''));
+
+        /**
+         * Get star and star percentage
+         */
+        const reviewListStat = $('#histogramTable > tbody')[0];
+        try {
+            reviewListStat.children.forEach((item) => {
+                const star = parseInt($(item.children[0]).text(), 10);
+                const percentage = $(item.children[2]).text();
+                this.reviewMetadata.stars_stat[star] = percentage;
+            });
+        } catch {
+            return;
+        }
+
+        const reviewsList = $('#cm_cr-review_list')[0].children;
+        let scrapingResult = {};
+        for (let i = 0; i < reviewsList.length; i++) {
+            const totalInResult = Object.keys(scrapingResult).length + this.collector.length;
+            if (totalInResult >= this.number && this.bulk) {
+                break;
+            }
+            const reviewId = reviewsList[i].attribs['id'];
+            if (!reviewId) {
+                continue;
+            }
+            scrapingResult[reviewId] = { id: reviewId };
+        }
+
+        /**
+         * Review date
+         */
+        for (let key in scrapingResult) {
+            const search = $(`#${key} [data-hook="review-date"]`);
+
+            scrapingResult[key].asin = {
+                original: this.asin,
+                variant: '',
+            };
+            try {
+                scrapingResult[key].review_data = search[0].children[0].data;
+                if (scrapingResult[key].review_data) {
+                    scrapingResult[key].date = this.geo.review_date(scrapingResult[key].review_data);
+                }
+            } catch (error) {
+                continue;
+            }
+        }
+
+        /**
+         * If product has more then one variant and {formatType} is set to {all_formats} then some reviews can be written for specific variants(ASIN)
+         * We can extract those ASIN id's
+         */
+        for (let key in scrapingResult) {
+            const search = $(`#${key} div.a-row.a-spacing-mini.review-data.review-format-strip > a`);
+
+            try {
+                const url = search[0].attribs.href;
+                const asinRegex = /product-reviews\/(\w+)\//.exec(url);
+                if (asinRegex) {
+                    scrapingResult[key].asin.variant = asinRegex[1];
+                }
+            } catch (error) {
+                continue;
+            }
+        }
+
+        /**
+         * Rating
+         */
+        for (let key in scrapingResult) {
+            const search = $(`#${key} [data-hook="review-star-rating"]`);
+
+            try {
+                scrapingResult[key].rating = parseFloat(search[0].children[0].children[0].data.split(' ')[0]);
+            } catch (error) {
+                continue;
+            }
+        }
+
+        /**
+         * Review title
+         */
+        for (let key in scrapingResult) {
+            const search = $(`#${key} [data-hook="review-title"]`);
+
+            try {
+                scrapingResult[key].title = $(search[0]).text().toString();
+            } catch (error) {
+                continue;
+            }
+        }
+
+        /**
+         * Review text
+         */
+        for (let key in scrapingResult) {
+            const search = $(`#${key} [data-hook="review-body"]`);
+
+            try {
+                scrapingResult[key].review = $(search[0]).text();
+            } catch (error) {
+                continue;
+            }
+        }
+
+        /**
+         * If purchase is verified
+         */
+        for (let key in scrapingResult) {
+            const search = $(`#${key} [data-reftag="cm_cr_arp_d_rvw_rvwer"]`);
+            scrapingResult[key].verified_purchase = false;
+
+            try {
+                scrapingResult[key].verified_purchase = !!search[0];
+            } catch (error) {
+                continue;
+            }
+        }
+
+        return scrapingResult;
+
+        // for (let key in scrapingResult) {
+        //     this.collector.push(scrapingResult[key]);
+        // }
     }
 
     /**
