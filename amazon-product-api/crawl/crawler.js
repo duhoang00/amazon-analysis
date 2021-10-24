@@ -535,16 +535,17 @@ class AmazonScraper {
                 amazonPrime: false,
             };
             try {
-                const priceSearch = $(`div[data-asin=${asin}] span[data-a-size="l"]`)[0] || $(`div[data-asin=${asin}] span[data-a-size="m"]`)[0];
-                const discountSearch = $(`div[data-asin=${asin}] span[data-a-strike="true"]`)[0];
-                const ratingSearch = $(`div[data-asin=${asin}] .a-icon-star-small`)[0];
-                const titleThumbnailSearch = $(`div[data-asin=${asin}] [data-image-source-density="1"]`)[0];
-                const amazonChoice = $(`div[data-asin=${asin}] span[id="${asin}-amazons-choice"]`).text();
-                const bestSeller = $(`div[data-asin=${asin}] span[id="${asin}-best-seller"]`).text();
-                const amazonPrime = $(`div[data-asin=${asin}] .s-prime`)[0];
+                const priceSearch =
+                    (await $(`div[data-asin=${asin}] span[data-a-size="l"]`)[0]) || $(`div[data-asin=${asin}] span[data-a-size="m"]`)[0];
+                const discountSearch = await $(`div[data-asin=${asin}] span[data-a-strike="true"]`)[0];
+                const ratingSearch = await $(`div[data-asin=${asin}] .a-icon-star-small`)[0];
+                const titleThumbnailSearch = await $(`div[data-asin=${asin}] [data-image-source-density="1"]`)[0];
+                const amazonChoice = await $(`div[data-asin=${asin}] span[id="${asin}-amazons-choice"]`).text();
+                const bestSeller = await $(`div[data-asin=${asin}] span[id="${asin}-best-seller"]`).text();
+                const amazonPrime = await $(`div[data-asin=${asin}] .s-prime`)[0];
 
                 if (priceSearch) {
-                    product.price.current_price = this.geo.price_format($(priceSearch.children[0]).text());
+                    product.price.current_price = await this.geo.price_format($(priceSearch.children[0]).text());
                 }
 
                 if (amazonChoice) {
@@ -558,33 +559,33 @@ class AmazonScraper {
                 }
 
                 if (discountSearch) {
-                    product.price.before_price = this.geo.price_format($(discountSearch.children[0]).text());
+                    product.price.before_price = await this.geo.price_format($(discountSearch.children[0]).text());
 
                     product.price.discounted = true;
 
-                    const savings = product.price.before_price - product.price.current_price;
+                    const savings = await (product.price.before_price - product.price.current_price);
                     if (savings <= 0) {
                         product.price.discounted = false;
 
                         product.price.before_price = 0;
                     } else {
-                        product.price.savings_amount = +(product.price.before_price - product.price.current_price).toFixed(2);
-                        product.price.savings_percent = +((100 / product.price.before_price) * product.price.savings_amount).toFixed(2);
+                        product.price.savings_amount = await +(product.price.before_price - product.price.current_price).toFixed(2);
+                        product.price.savings_percent = await +((100 / product.price.before_price) * product.price.savings_amount).toFixed(2);
                     }
                 }
 
                 if (ratingSearch) {
-                    product.reviews.rating = parseFloat(ratingSearch.children[0].children[0].data);
+                    product.reviews.rating = await parseFloat(ratingSearch.children[0].children[0].data);
 
-                    product.reviews.total_reviews = parseInt(ratingSearch.parent.parent.parent.next.attribs['aria-label'].replace(/\,/g, ''));
+                    product.reviews.total_reviews = await parseInt(ratingSearch.parent.parent.parent.next.attribs['aria-label'].replace(/\,/g, ''));
 
-                    product.score = parseFloat(product.reviews.rating * product.reviews.total_reviews).toFixed(2);
+                    product.score = await parseFloat(product.reviews.rating * product.reviews.total_reviews).toFixed(2);
                 }
 
                 if (titleThumbnailSearch) {
-                    product.title = titleThumbnailSearch.attribs.alt;
+                    product.title = await titleThumbnailSearch.attribs.alt;
 
-                    product.thumbnail = titleThumbnailSearch.attribs.src;
+                    product.thumbnail = await titleThumbnailSearch.attribs.src;
                 }
             } catch (err) {
                 continue;
@@ -595,11 +596,11 @@ class AmazonScraper {
             const bodyReviews = await this.buildReviewsRequest(this.bulk ? item : this.searchPage);
             const reviewsData = await this.grabEachProductReviews(bodyReviews);
 
-            let count = 2;
+            // let count = 2;
             for (let reviewId in reviewsData) {
-                if (count === 0) {
-                    return;
-                }
+                // if (count === 0) {
+                //     return;
+                // }
                 if (reviewId) {
                     spinner.text = `ReviewId --> ${reviewId}`;
                     scrapingResult[reviewId] = {};
@@ -622,7 +623,7 @@ class AmazonScraper {
 
                     await this.collector.push(scrapingResult[reviewId]);
                 }
-                count--;
+                // count--;
             }
 
             console.log(`scrapingResult ${scrapingResult}`);
