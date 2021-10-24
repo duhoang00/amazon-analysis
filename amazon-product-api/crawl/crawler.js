@@ -507,6 +507,8 @@ class AmazonScraper {
                 continue;
             }
 
+            const keyword = this.keyword;
+
             // product info
             let product = {
                 position: {
@@ -515,6 +517,7 @@ class AmazonScraper {
                     global_position: `${p}${i}`,
                 },
                 asin,
+                keyword,
                 price: {
                     discounted: false,
                     current_price: 0,
@@ -604,7 +607,6 @@ class AmazonScraper {
                 if (reviewId) {
                     spinner.text = `ReviewId --> ${reviewId}`;
                     scrapingResult[reviewId] = {};
-                    scrapingResult[reviewId].asin = asin;
                     if (reviewsData[reviewId]) {
                         scrapingResult[reviewId] = {
                             review: {
