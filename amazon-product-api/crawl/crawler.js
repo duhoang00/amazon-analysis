@@ -496,7 +496,7 @@ class AmazonScraper {
         let position = 0;
 
         // test so productList.length -> 2
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < productList.length; i++) {
             // if (this.cli) {
             // spinner.text = `Found ${this.collector.length + productList.length} products`;
             // }
