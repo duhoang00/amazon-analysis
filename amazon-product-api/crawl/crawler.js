@@ -246,7 +246,11 @@ class AmazonScraper {
 
         await this.mainLoop();
 
+        console.log('sort and filter');
+
         this.sortAndFilterResult();
+
+        console.log('saving to file');
 
         await this.saveResultToFile();
 
@@ -295,7 +299,7 @@ class AmazonScraper {
                     if (this.scrapeType === 'products-reviews') {
                         console.log('\n scrape products-reviews');
                         const productsBody = await this.buildProductsRequest(this.bulk ? item : this.searchPage);
-                        this.grabProductsReviews(productsBody, item);
+                        await this.grabProductsReviews(productsBody, item);
                     }
                     if (!this.bulk) {
                         throw new Error('Done');
@@ -329,6 +333,7 @@ class AmazonScraper {
      * Save results to the file
      */
     async saveResultToFile() {
+        console.log(`collector length: ${this.collector.length}`);
         if (this.collector.length) {
             switch (this.fileType) {
                 case 'json':
@@ -358,7 +363,7 @@ class AmazonScraper {
                 this.collector.sort((a, b) => b.rating - a.rating);
             }
         }
-        if (this.scrapeType === 'products' || this.scrapeType === 'products-reviews') {
+        if (this.scrapeType === 'products') {
             this.collector.sort((a, b) => a.position.global_position - b.position.global_position);
             this.collector.forEach((item, index) => {
                 item.position.global_position = index += 1;
@@ -487,52 +492,23 @@ class AmazonScraper {
         const $ = cheerio.load(productsBody.replace(/\s\s+/g, '').replace(/\n/g, ''));
         let productList = $('div[data-index]');
         const scrapingResult = {};
-
         console.log(`productList length ${productList.length}`);
-
         let position = 0;
-        for (let i = 0; i < productList.length; i++) {
+
+        // test so productList.length -> 2
+        for (let i = 0; i < 2; i++) {
             if (this.cli) {
-                spinner.text = `Found ${this.collector.length + productList.length} products`;
+                // spinner.text = `Found ${this.collector.length + productList.length} products`;
             }
 
             const asin = productList[i].attribs['data-asin'];
-
+            spinner.text = `Asin: ${asin}`;
             if (!asin) {
                 continue;
             }
 
-            console.log(`asin: ${asin}`);
-            this.temp_asin = asin;
-            const bodyReviews = await this.buildReviewsRequest(this.bulk ? item : this.searchPage);
-            const reviewsData = await this.grabEachProductReviews(bodyReviews);
-
-            let count = 2;
-            for (let reviewId in reviewsData) {
-                if (count === 0) {
-                    return;
-                }
-                console.log(reviewId);
-                if (reviewsData[reviewId]) {
-                    console.log(reviewsData[reviewId]);
-                    scrapingResult[reviewId] = await {
-                        review: {
-                            id: reviewsData[reviewId].id,
-                            review_data: reviewsData[reviewId].review_data,
-                            rating: reviewsData[reviewId].rating,
-                            title: reviewsData[reviewId].title,
-                            review: reviewsData[reviewId].review,
-                            verified_purchase: reviewsData[reviewId].verified_purchase,
-                        },
-                    };
-                }
-                count--;
-            }
-
-            console.log('scrapingResult');
-            console.log(scrapingResult);
-
-            scrapingResult[asin] = {
+            // product info
+            let product = {
                 position: {
                     page: p,
                     position: (position += 1),
@@ -551,13 +527,6 @@ class AmazonScraper {
                     total_reviews: 0,
                     rating: 0,
                 },
-                review: {
-                    id: '',
-                    review_data: '',
-                    rating: '',
-                    title: '',
-                    review: '',
-                },
                 url: `${this.mainHost}/dp/${asin}`,
                 score: 0,
                 sponsored: false,
@@ -565,78 +534,196 @@ class AmazonScraper {
                 bestSeller: false,
                 amazonPrime: false,
             };
-        }
-
-        for (let key in scrapingResult) {
             try {
-                const priceSearch = $(`div[data-asin=${key}] span[data-a-size="l"]`)[0] || $(`div[data-asin=${key}] span[data-a-size="m"]`)[0];
-                const discountSearch = $(`div[data-asin=${key}] span[data-a-strike="true"]`)[0];
-                const ratingSearch = $(`div[data-asin=${key}] .a-icon-star-small`)[0];
-                const titleThumbnailSearch = $(`div[data-asin=${key}] [data-image-source-density="1"]`)[0];
-                const amazonChoice = $(`div[data-asin=${key}] span[id="${key}-amazons-choice"]`).text();
-                const bestSeller = $(`div[data-asin=${key}] span[id="${key}-best-seller"]`).text();
-                const amazonPrime = $(`div[data-asin=${key}] .s-prime`)[0];
+                const priceSearch = $(`div[data-asin=${asin}] span[data-a-size="l"]`)[0] || $(`div[data-asin=${asin}] span[data-a-size="m"]`)[0];
+                const discountSearch = $(`div[data-asin=${asin}] span[data-a-strike="true"]`)[0];
+                const ratingSearch = $(`div[data-asin=${asin}] .a-icon-star-small`)[0];
+                const titleThumbnailSearch = $(`div[data-asin=${asin}] [data-image-source-density="1"]`)[0];
+                const amazonChoice = $(`div[data-asin=${asin}] span[id="${asin}-amazons-choice"]`).text();
+                const bestSeller = $(`div[data-asin=${asin}] span[id="${asin}-best-seller"]`).text();
+                const amazonPrime = $(`div[data-asin=${asin}] .s-prime`)[0];
 
                 if (priceSearch) {
-                    scrapingResult[key].price.current_price = this.geo.price_format($(priceSearch.children[0]).text());
+                    product.price.current_price = this.geo.price_format($(priceSearch.children[0]).text());
                 }
 
                 if (amazonChoice) {
-                    scrapingResult[key].amazonChoice = true;
+                    product.amazonChoice = true;
                 }
                 if (bestSeller) {
-                    scrapingResult[key].bestSeller = true;
+                    product.bestSeller = true;
                 }
                 if (amazonPrime) {
-                    scrapingResult[key].amazonPrime = true;
+                    product.amazonPrime = true;
                 }
 
                 if (discountSearch) {
-                    scrapingResult[key].price.before_price = this.geo.price_format($(discountSearch.children[0]).text());
+                    product.price.before_price = this.geo.price_format($(discountSearch.children[0]).text());
 
-                    scrapingResult[key].price.discounted = true;
+                    product.price.discounted = true;
 
-                    const savings = scrapingResult[key].price.before_price - scrapingResult[key].price.current_price;
+                    const savings = product.price.before_price - product.price.current_price;
                     if (savings <= 0) {
-                        scrapingResult[key].price.discounted = false;
+                        product.price.discounted = false;
 
-                        scrapingResult[key].price.before_price = 0;
+                        product.price.before_price = 0;
                     } else {
-                        scrapingResult[key].price.savings_amount = +(
-                            scrapingResult[key].price.before_price - scrapingResult[key].price.current_price
-                        ).toFixed(2);
-                        scrapingResult[key].price.savings_percent = +(
-                            (100 / scrapingResult[key].price.before_price) *
-                            scrapingResult[key].price.savings_amount
-                        ).toFixed(2);
+                        product.price.savings_amount = +(product.price.before_price - product.price.current_price).toFixed(2);
+                        product.price.savings_percent = +((100 / product.price.before_price) * product.price.savings_amount).toFixed(2);
                     }
                 }
 
                 if (ratingSearch) {
-                    scrapingResult[key].reviews.rating = parseFloat(ratingSearch.children[0].children[0].data);
+                    product.reviews.rating = parseFloat(ratingSearch.children[0].children[0].data);
 
-                    scrapingResult[key].reviews.total_reviews = parseInt(
-                        ratingSearch.parent.parent.parent.next.attribs['aria-label'].replace(/\,/g, ''),
-                    );
+                    product.reviews.total_reviews = parseInt(ratingSearch.parent.parent.parent.next.attribs['aria-label'].replace(/\,/g, ''));
 
-                    scrapingResult[key].score = parseFloat(scrapingResult[key].reviews.rating * scrapingResult[key].reviews.total_reviews).toFixed(2);
+                    product.score = parseFloat(product.reviews.rating * product.reviews.total_reviews).toFixed(2);
                 }
 
                 if (titleThumbnailSearch) {
-                    scrapingResult[key].title = titleThumbnailSearch.attribs.alt;
+                    product.title = titleThumbnailSearch.attribs.alt;
 
-                    scrapingResult[key].thumbnail = titleThumbnailSearch.attribs.src;
+                    product.thumbnail = titleThumbnailSearch.attribs.src;
                 }
             } catch (err) {
                 continue;
             }
+
+            // review info
+            this.temp_asin = asin;
+            const bodyReviews = await this.buildReviewsRequest(this.bulk ? item : this.searchPage);
+            const reviewsData = await this.grabEachProductReviews(bodyReviews);
+
+            let count = 2;
+            for (let reviewId in reviewsData) {
+                if (count === 0) {
+                    return;
+                }
+                if (reviewId) {
+                    spinner.text = `ReviewId --> ${reviewId}`;
+                    scrapingResult[reviewId] = {};
+                    scrapingResult[reviewId].asin = asin;
+                    if (reviewsData[reviewId]) {
+                        scrapingResult[reviewId] = {
+                            review: {
+                                id: reviewsData[reviewId].id,
+                                review_data: reviewsData[reviewId].review_data,
+                                rating: reviewsData[reviewId].rating,
+                                title: reviewsData[reviewId].title,
+                                review: reviewsData[reviewId].review,
+                                verified_purchase: reviewsData[reviewId].verified_purchase,
+                            },
+                        };
+                    }
+                    scrapingResult[reviewId].product = product;
+                    console.log(`done scrapingResult --> ${reviewId}:`);
+                    console.log(scrapingResult[reviewId]);
+
+                    this.collector.push(scrapingResult[reviewId]);
+                }
+                count--;
+            }
+
+            console.log(`scrapingResult ${scrapingResult}`);
+
+            // scrapingResult[asin] = {
+            //     position: {
+            //         page: p,
+            //         position: (position += 1),
+            //         global_position: `${p}${i}`,
+            //     },
+            //     asin,
+            //     price: {
+            //         discounted: false,
+            //         current_price: 0,
+            //         currency: this.geo.currency,
+            //         before_price: 0,
+            //         savings_amount: 0,
+            //         savings_percent: 0,
+            //     },
+            //     reviews: {
+            //         total_reviews: 0,
+            //         rating: 0,
+            //     },
+            //     url: `${this.mainHost}/dp/${asin}`,
+            //     score: 0,
+            //     sponsored: false,
+            //     amazonChoice: false,
+            //     bestSeller: false,
+            //     amazonPrime: false,
+            // };
         }
 
-        for (let key in scrapingResult) {
-            console.log('scrapingResult');
-            console.log(scrapingResult);
-            this.collector.push(scrapingResult[key]);
-        }
+        // for (let key in scrapingResult) {
+        //     try {
+        //         const priceSearch = $(`div[data-asin=${key}] span[data-a-size="l"]`)[0] || $(`div[data-asin=${key}] span[data-a-size="m"]`)[0];
+        //         const discountSearch = $(`div[data-asin=${key}] span[data-a-strike="true"]`)[0];
+        //         const ratingSearch = $(`div[data-asin=${key}] .a-icon-star-small`)[0];
+        //         const titleThumbnailSearch = $(`div[data-asin=${key}] [data-image-source-density="1"]`)[0];
+        //         const amazonChoice = $(`div[data-asin=${key}] span[id="${key}-amazons-choice"]`).text();
+        //         const bestSeller = $(`div[data-asin=${key}] span[id="${key}-best-seller"]`).text();
+        //         const amazonPrime = $(`div[data-asin=${key}] .s-prime`)[0];
+
+        //         if (priceSearch) {
+        //             scrapingResult[key].price.current_price = this.geo.price_format($(priceSearch.children[0]).text());
+        //         }
+
+        //         if (amazonChoice) {
+        //             scrapingResult[key].amazonChoice = true;
+        //         }
+        //         if (bestSeller) {
+        //             scrapingResult[key].bestSeller = true;
+        //         }
+        //         if (amazonPrime) {
+        //             scrapingResult[key].amazonPrime = true;
+        //         }
+
+        //         if (discountSearch) {
+        //             scrapingResult[key].price.before_price = this.geo.price_format($(discountSearch.children[0]).text());
+
+        //             scrapingResult[key].price.discounted = true;
+
+        //             const savings = scrapingResult[key].price.before_price - scrapingResult[key].price.current_price;
+        //             if (savings <= 0) {
+        //                 scrapingResult[key].price.discounted = false;
+
+        //                 scrapingResult[key].price.before_price = 0;
+        //             } else {
+        //                 scrapingResult[key].price.savings_amount = +(
+        //                     scrapingResult[key].price.before_price - scrapingResult[key].price.current_price
+        //                 ).toFixed(2);
+        //                 scrapingResult[key].price.savings_percent = +(
+        //                     (100 / scrapingResult[key].price.before_price) *
+        //                     scrapingResult[key].price.savings_amount
+        //                 ).toFixed(2);
+        //             }
+        //         }
+
+        //         if (ratingSearch) {
+        //             scrapingResult[key].reviews.rating = parseFloat(ratingSearch.children[0].children[0].data);
+
+        //             scrapingResult[key].reviews.total_reviews = parseInt(
+        //                 ratingSearch.parent.parent.parent.next.attribs['aria-label'].replace(/\,/g, ''),
+        //             );
+
+        //             scrapingResult[key].score = parseFloat(scrapingResult[key].reviews.rating * scrapingResult[key].reviews.total_reviews).toFixed(2);
+        //         }
+
+        //         if (titleThumbnailSearch) {
+        //             scrapingResult[key].title = titleThumbnailSearch.attribs.alt;
+
+        //             scrapingResult[key].thumbnail = titleThumbnailSearch.attribs.src;
+        //         }
+        //     } catch (err) {
+        //         continue;
+        //     }
+        // }
+
+        console.log(`final scrapingResult ${scrapingResult}`);
+        // for (let key in scrapingResult) {
+        //     this.collector.push(scrapingResult[key]);
+        // }
         if (productList.length < 10) {
             throw new Error('No more products');
         }
@@ -926,6 +1013,7 @@ class AmazonScraper {
      * @param {*} body
      */
     grabProduct(body, p) {
+        console.log('grab products');
         const $ = cheerio.load(body.replace(/\s\s+/g, '').replace(/\n/g, ''));
         let productList = $('div[data-index]');
         const scrapingResult = {};
