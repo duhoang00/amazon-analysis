@@ -30,12 +30,16 @@ const INIT_OPTIONS = {
 
 const startCrawler = async () => {
     try {
-        let options = { ...INIT_OPTIONS };
-        options.geo = geo['US'];
-        options.scrapeType = 'products-reviews';
-        options.keyword = 'xbox-one';
+        const listKeyWords = ['keyboard keychron k1', 'keyboard keychron k2'];
 
-        const data = await new Crawler(options).startScraper();
+        for (let i = 0; i < listKeyWords.length; i++) {
+            let options = { ...INIT_OPTIONS };
+            options.geo = geo['US'];
+            options.scrapeType = 'products-reviews';
+            options.keyword = listKeyWords[i];
+
+            const data = await new Crawler(options).startScraper();
+        }
     } catch (e) {
         console.log(e);
     }
