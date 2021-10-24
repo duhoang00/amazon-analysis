@@ -324,7 +324,7 @@ class AmazonScraper {
             case 'asin':
                 return `${this.scrapeType}(${this.asin})_${this.initTime}`;
             case 'products-reviews':
-                return `${this.scrapeType}_${this.initTime}`;
+                return `${this.scrapeType}_${this.keyword}_${this.initTime}`;
             default:
                 throw new Error(`Unknow scraping type: ${this.scrapeType}`);
         }
