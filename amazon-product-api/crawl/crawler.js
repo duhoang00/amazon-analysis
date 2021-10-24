@@ -488,18 +488,18 @@ class AmazonScraper {
      * @param {*} body
      */
     async grabProductsReviews(productsBody, p) {
-        console.log('\n grabProductsReviews');
+        spinner.text = '\n Grabbing products reviews';
         const $ = cheerio.load(productsBody.replace(/\s\s+/g, '').replace(/\n/g, ''));
         let productList = $('div[data-index]');
         const scrapingResult = {};
-        console.log(`productList length ${productList.length}`);
+        spinner.text = `Product List Length --> ${productList.length}`;
         let position = 0;
 
         // test so productList.length -> 2
-        for (let i = 0; i < 2; i++) {
-            if (this.cli) {
-                // spinner.text = `Found ${this.collector.length + productList.length} products`;
-            }
+        for (let i = 0; i < 5; i++) {
+            // if (this.cli) {
+            // spinner.text = `Found ${this.collector.length + productList.length} products`;
+            // }
 
             const asin = productList[i].attribs['data-asin'];
             spinner.text = `Asin: ${asin}`;
@@ -620,105 +620,13 @@ class AmazonScraper {
                     console.log(`done scrapingResult --> ${reviewId}:`);
                     console.log(scrapingResult[reviewId]);
 
-                    this.collector.push(scrapingResult[reviewId]);
+                    await this.collector.push(scrapingResult[reviewId]);
                 }
                 count--;
             }
 
             console.log(`scrapingResult ${scrapingResult}`);
-
-            // scrapingResult[asin] = {
-            //     position: {
-            //         page: p,
-            //         position: (position += 1),
-            //         global_position: `${p}${i}`,
-            //     },
-            //     asin,
-            //     price: {
-            //         discounted: false,
-            //         current_price: 0,
-            //         currency: this.geo.currency,
-            //         before_price: 0,
-            //         savings_amount: 0,
-            //         savings_percent: 0,
-            //     },
-            //     reviews: {
-            //         total_reviews: 0,
-            //         rating: 0,
-            //     },
-            //     url: `${this.mainHost}/dp/${asin}`,
-            //     score: 0,
-            //     sponsored: false,
-            //     amazonChoice: false,
-            //     bestSeller: false,
-            //     amazonPrime: false,
-            // };
         }
-
-        // for (let key in scrapingResult) {
-        //     try {
-        //         const priceSearch = $(`div[data-asin=${key}] span[data-a-size="l"]`)[0] || $(`div[data-asin=${key}] span[data-a-size="m"]`)[0];
-        //         const discountSearch = $(`div[data-asin=${key}] span[data-a-strike="true"]`)[0];
-        //         const ratingSearch = $(`div[data-asin=${key}] .a-icon-star-small`)[0];
-        //         const titleThumbnailSearch = $(`div[data-asin=${key}] [data-image-source-density="1"]`)[0];
-        //         const amazonChoice = $(`div[data-asin=${key}] span[id="${key}-amazons-choice"]`).text();
-        //         const bestSeller = $(`div[data-asin=${key}] span[id="${key}-best-seller"]`).text();
-        //         const amazonPrime = $(`div[data-asin=${key}] .s-prime`)[0];
-
-        //         if (priceSearch) {
-        //             scrapingResult[key].price.current_price = this.geo.price_format($(priceSearch.children[0]).text());
-        //         }
-
-        //         if (amazonChoice) {
-        //             scrapingResult[key].amazonChoice = true;
-        //         }
-        //         if (bestSeller) {
-        //             scrapingResult[key].bestSeller = true;
-        //         }
-        //         if (amazonPrime) {
-        //             scrapingResult[key].amazonPrime = true;
-        //         }
-
-        //         if (discountSearch) {
-        //             scrapingResult[key].price.before_price = this.geo.price_format($(discountSearch.children[0]).text());
-
-        //             scrapingResult[key].price.discounted = true;
-
-        //             const savings = scrapingResult[key].price.before_price - scrapingResult[key].price.current_price;
-        //             if (savings <= 0) {
-        //                 scrapingResult[key].price.discounted = false;
-
-        //                 scrapingResult[key].price.before_price = 0;
-        //             } else {
-        //                 scrapingResult[key].price.savings_amount = +(
-        //                     scrapingResult[key].price.before_price - scrapingResult[key].price.current_price
-        //                 ).toFixed(2);
-        //                 scrapingResult[key].price.savings_percent = +(
-        //                     (100 / scrapingResult[key].price.before_price) *
-        //                     scrapingResult[key].price.savings_amount
-        //                 ).toFixed(2);
-        //             }
-        //         }
-
-        //         if (ratingSearch) {
-        //             scrapingResult[key].reviews.rating = parseFloat(ratingSearch.children[0].children[0].data);
-
-        //             scrapingResult[key].reviews.total_reviews = parseInt(
-        //                 ratingSearch.parent.parent.parent.next.attribs['aria-label'].replace(/\,/g, ''),
-        //             );
-
-        //             scrapingResult[key].score = parseFloat(scrapingResult[key].reviews.rating * scrapingResult[key].reviews.total_reviews).toFixed(2);
-        //         }
-
-        //         if (titleThumbnailSearch) {
-        //             scrapingResult[key].title = titleThumbnailSearch.attribs.alt;
-
-        //             scrapingResult[key].thumbnail = titleThumbnailSearch.attribs.src;
-        //         }
-        //     } catch (err) {
-        //         continue;
-        //     }
-        // }
 
         console.log(`final scrapingResult ${scrapingResult}`);
         // for (let key in scrapingResult) {
