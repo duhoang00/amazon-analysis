@@ -3,18 +3,36 @@ from stop_words import get_stop_words
 from spellchecker import SpellChecker as spell_checker
 import string
 from nltk.stem import *
+import numpy as np
+from nltk.stem import PorterStemmer
+from nltk.tokenize import word_tokenize
 
 
 # Initialization
 spell = spell_checker()
 stop_words = get_stop_words('english')
 stemmer = SnowballStemmer("english")
+ps = PorterStemmer()
+
 
 # Loading data
-df = pd.read_csv("../crawler/crawl/data.csv")
+df = pd.read_csv("../crawler/crawl/10rows_demo_data.csv")
 
 # Remove null
 df = df[df["review.title"].notnull()]
+
+# Replace -,?,#,*,etc. with np.nan form
+for col in df.columns:
+    df[col].replace({'?': np.nan}, inplace=True)
+
+# Take only row if they have review title & review rating & review data & review
+df = df[df["review.title"].notna()]
+df = df[df["review.review"].notna()]
+df = df[df["review.rating"].notna()]
+df = df[df["review.review_data"].notna()]
+
+# Replace missing numeric values with mean
+df.fillna(df.mean(), inplace=True)
 
 # Correct review title
 for label, sentence in df["review.title"].items():
@@ -25,17 +43,20 @@ for label, sentence in df["review.title"].items():
     # Split into words
     arr_sentence = punctuated_sentence.split()
     for word in arr_sentence:
-        # Spelling correctionz
+        # Spelling correction
         correct_word = spell.correction(word).lower()
-        # Stem word with filter out stop words
-        stemed_word = stemmer.stem(correct_word)
+
+        # Stem word with filter out stop words # NO using stem
+        stemed_word = ps.stem(correct_word)
+
         # Word correction one more time cause stem word library is not that good
-        validated_word = spell.correction(stemed_word).lower()
+        validated_word = spell.correction(correct_word).lower()
+
         # Filter out stop words one more time
         if not validated_word in stop_words:
             # Remove duplicate word
             if new_sentence.find(validated_word) == -1:
-                new_sentence += validated_word + ", "
+                new_sentence += validated_word + " "
     df.loc[label, "review.title"] = new_sentence
 
 # Review

@@ -54,10 +54,6 @@ plt.xlabel('Rating')
 plt.ylabel('Price')
 plt.savefig("./eda-figure/Figure_scatter_rating_price.png")
 
-dropped_df = df.drop_duplicates(subset=["product.asin"], keep="first")
-
-print(dropped_df["product.asin"])
-
 # Line - Product price and global position
 # plt.figure(figsize=(10, 10))
 # plt.plot(dropped_df["product.position.global_position"],
