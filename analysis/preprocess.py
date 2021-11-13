@@ -11,7 +11,7 @@ stop_words = get_stop_words('english')
 stemmer = SnowballStemmer("english")
 
 # Loading data
-df = pd.read_csv("../amazon-product-api/crawl/10rows_demo_data.csv")
+df = pd.read_csv("../crawler/crawl/data.csv")
 
 # Remove null
 df = df[df["review.title"].notnull()]
