@@ -7,7 +7,7 @@ import seaborn as sns
 
 def save_figure_missing_value(figureName):
     heat_map_missing_value = sns.heatmap(
-        df.isnull(), cbar=False, cmap='viridis')
+        df.isnull(), cbar=False, cmap="viridis")
     figure_missing_value = heat_map_missing_value.get_figure()
     figure_missing_value.savefig(figureName, dpi=400)
 
@@ -30,7 +30,7 @@ save_figure_missing_value("./eda-figure/figure_missing_value.png")
 
 # Replace -,?,#,*,etc. with np.nan form
 for col in df.columns:
-    df[col].replace({'?': np.nan}, inplace=True)
+    df[col].replace({"?": np.nan}, inplace=True)
 
 # Take only row if they have review title & review rating & review data & review
 df = df[df["review.title"].notna()]
@@ -45,28 +45,20 @@ df.fillna(df.mean(), inplace=True)
 # print("saving eda missing value")
 save_figure_missing_value("./eda-figure/figure_NO_missing_value.png")
 
-# Relation
-# Scatter - Product rating and price
-plt.figure(figsize=(10, 10))
-plt.scatter(x="review.rating", y="product.price.current_price", data=df, )
+# Scatter - Review rating and Product price - OK
+plt.figure(figsize=(10, 10), dpi=200)
+plt.scatter(x="review.rating", y="product.price.current_price", data=df)
 plt.title("Review rating and product price")
-plt.xlabel('Rating')
-plt.ylabel('Price')
+plt.xlabel("Review rating")
+plt.ylabel("Product price")
 plt.savefig("./eda-figure/Figure_scatter_rating_price.png")
 
-# Line - Product price and global position
-# plt.figure(figsize=(10, 10))
-# plt.plot(dropped_df["product.position.global_position"],
-#          dropped_df["product.price.current_price"])
-# plt.title("Product global position and price")
-# plt.xlabel("Global position")
-# plt.ylabel("Price")
-# plt.savefig("./eda-figure/Figure_line_position_price.png")
-
-# Bar - Product rating and price
-# plt.figure(figsize=(10, 10))
-# plt.bar(df["review.rating"], df["product.position.global_position"])
-# plt.title("Product rating and global position")
-# plt.xlabel('Rating')
-# plt.ylabel('Global position')
-# plt.savefig("./eda-figure/Figure_bar_rating_global_position.png")
+# Scatter - Product rating and saving amount
+# df_savings_amount = df.loc[df["product.price.savings_amount"] > 0]
+plt.figure(figsize=(10, 10), dpi=300)
+plt.scatter(x="review.rating", y="product.price.savings_amount",
+            data=df)
+plt.title("Review rating and product price")
+plt.xlabel("Rating")
+plt.ylabel("Saving amount")
+plt.savefig("./eda-figure/Figure_scatter_rating_saving_amount.png")
