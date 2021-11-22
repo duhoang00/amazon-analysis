@@ -5,6 +5,6 @@ data
 --> train model
 --> test model
 --> validate model
---> test random comment
+--> test random review
 
 * Do not modify Excel file directly
