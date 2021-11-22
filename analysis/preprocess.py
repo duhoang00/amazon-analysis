@@ -16,7 +16,7 @@ ps = PorterStemmer()
 
 
 # Loading data
-df = pd.read_csv("../crawler/crawl/10rows_demo_data.csv")
+df = pd.read_csv("./data/data-no-cr.csv")
 
 # Remove null
 df = df[df["review.title"].notnull()]
@@ -61,3 +61,6 @@ for label, sentence in df["review.title"].items():
 
 # Review
 print(df["review.title"])
+
+# Save to file
+df.to_csv("preprocess-data.csv")
