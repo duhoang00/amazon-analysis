@@ -1,0 +1,8 @@
+data
+--> preprocess
+--> label (code & -1 0 1)
+--> split train/test
+--> train model
+--> test model
+
+* Do not modify Excel file directly
