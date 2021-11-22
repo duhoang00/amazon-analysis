@@ -19,14 +19,14 @@ ps = PorterStemmer()
 df = pd.read_csv("./data/data-no-cr.csv")
 
 # Remove null
-df = df[df["review.title"].notnull()]
+df = df[df["review.review"].notnull()]
 
 # Replace -,?,#,*,etc. with np.nan form
-for col in df.columns:
-    df[col].replace({'?': np.nan}, inplace=True)
+# for col in df.columns:
+#     df[col].replace({'?': np.nan}, inplace=True)
 
-# Take only row if they have review title & review rating & review data & review
-df = df[df["review.title"].notna()]
+# Take only row if they have review & review rating & review data & review
+df = df[df["review.review"].notna()]
 df = df[df["review.review"].notna()]
 df = df[df["review.rating"].notna()]
 df = df[df["review.review_data"].notna()]
@@ -34,8 +34,8 @@ df = df[df["review.review_data"].notna()]
 # Replace missing numeric values with mean
 df.fillna(df.mean(), inplace=True)
 
-# Correct review title
-for label, sentence in df["review.title"].items():
+# Correct review
+for label, sentence in df["review.review"].items():
     new_sentence = ""
     # Filter Out Punctuation
     punctuated_sentence = sentence.translate(
@@ -57,10 +57,10 @@ for label, sentence in df["review.title"].items():
             # Remove duplicate word
             if new_sentence.find(validated_word) == -1:
                 new_sentence += validated_word + " "
-    df.loc[label, "review.title"] = new_sentence
+    df.loc[label, "review.review"] = new_sentence
 
 # Review
-print(df["review.title"])
+print(df["review.review"])
 
 # Save to file
 df.to_csv("preprocess-data.csv")
