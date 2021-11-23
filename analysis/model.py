@@ -1,6 +1,4 @@
-from re import U
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -11,6 +9,7 @@ from sklearn.metrics import classification_report, plot_confusion_matrix
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
+import joblib
 
 df = pd.read_csv("./data/label-data.csv")
 
@@ -64,3 +63,10 @@ plot_confusion_matrix(randomforest, X_test, y_test, display_labels=[
                       'Negative', 'Neural', 'Positive'], cmap='Reds', xticks_rotation='vertical')
 plt.savefig('./model-figure/confusion_matrix_random_forest.png',
             dpi=400, bbox_inches='tight')
+
+# save model
+# joblib.dump(randomforest, "./model/random_forest.joblib")
+
+
+# load model
+# loaded_rf = joblib.load("./random_forest.joblib")
