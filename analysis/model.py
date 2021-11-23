@@ -19,19 +19,16 @@ tfidf = TfidfVectorizer(min_df=50, max_df=0.8, max_features=40000,
 tfidf.fit(df['review.review'])
 X = tfidf.transform(df['review.review'])
 
-vocab = tfidf.get_feature_names()  # lay ten cac tu
-print(vocab[:])
-
-print("Vocabulary length:", len(vocab))  # dem so luong tu
+vocab = tfidf.get_feature_names()
+# print(vocab[:])
+# print("Vocabulary length:", len(vocab))
 
 dist = np.sum(X, axis=0)
-checking = pd.DataFrame(dist, columns=vocab)  # tao bang
+checking = pd.DataFrame(dist, columns=vocab)
 
-print(checking)  # show bang
-
+# print(checking)
 y = df['sentiment']
-
-print(y)
+# print(y)
 
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=10, shuffle=True)
