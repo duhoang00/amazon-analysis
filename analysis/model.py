@@ -10,6 +10,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 import joblib
+import pickle
 
 df = pd.read_csv("./data/label-data.csv")
 
@@ -20,6 +21,7 @@ tfidf.fit(df['review.review'])
 
 X = tfidf.transform(df['review.review'])
 y = df['sentiment']
+# pickle.dump(tfidf.vocabulary_, open("./model/tfidf_vocab.pkl", "wb"))
 
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=10, shuffle=True)
@@ -66,7 +68,3 @@ plt.savefig('./model-figure/confusion_matrix_random_forest.png',
 
 # save model
 # joblib.dump(randomforest, "./model/random_forest.joblib")
-
-
-# load model
-# loaded_rf = joblib.load("./random_forest.joblib")

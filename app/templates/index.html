@@ -1,0 +1,19 @@
+
+<form action="/run" method = "POST">
+    <p>Review: <input type = "text" name = "review" /></p>
+    {% block content %}
+        {% if result == "positive" %}
+            <p style="color:green">{{ result }}</p>
+        {% endif %}
+
+        {% if result == "negative" %}
+            <p style="color:red">{{ result }}</p>
+        {% endif %}
+
+        {% if result == "neutral" %}
+            <p style="color:orange">{{ result }}</p>
+        {% endif %}
+    {% endblock content %}
+    <p><input type = "submit" value = "Analyze" /></p>
+
+</form>
