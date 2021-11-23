@@ -35,4 +35,4 @@ label_df['sentiment'] = label_df.apply(sentiment_label, axis=1)
 print("label_df")
 print(label_df)
 
-label_df.to_csv("label-data.csv")
+label_df.to_csv("./data/label-data.csv")
