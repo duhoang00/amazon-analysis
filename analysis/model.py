@@ -13,22 +13,13 @@ from sklearn.ensemble import RandomForestClassifier
 
 df = pd.read_csv("./data/label-data.csv")
 
-tfidf = TfidfVectorizer(min_df=50, max_df=0.8, max_features=40000,
-                        sublinear_tf=True)  # giai thich TFidfVectorizer
 # min_df -> dưới số này thì ko lấy, max_df -> trên tỉ lệ % này thì ko lấy, max_features -> số lượng từ
+tfidf = TfidfVectorizer(min_df=50, max_df=0.8, max_features=40000,
+                        sublinear_tf=True)
 tfidf.fit(df['review.review'])
+
 X = tfidf.transform(df['review.review'])
-
-vocab = tfidf.get_feature_names()
-# print(vocab[:])
-# print("Vocabulary length:", len(vocab))
-
-dist = np.sum(X, axis=0)
-checking = pd.DataFrame(dist, columns=vocab)
-
-# print(checking)
 y = df['sentiment']
-# print(y)
 
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=10, shuffle=True)
