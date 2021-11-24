@@ -1,19 +1,59 @@
 
-<form action="/run" method = "POST">
-    <p>Review: <input type = "text" name = "review" /></p>
-    {% block content %}
-        {% if result == "positive" %}
-            <p style="color:green">{{ result }}</p>
-        {% endif %}
 
-        {% if result == "negative" %}
-            <p style="color:red">{{ result }}</p>
-        {% endif %}
 
-        {% if result == "neutral" %}
-            <p style="color:orange">{{ result }}</p>
-        {% endif %}
-    {% endblock content %}
-    <p><input type = "submit" value = "Analyze" /></p>
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Review sentiment</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css"
+    </head>
+<body>
+    <div class="box " style="margin: 10%">
+        <h1 class="title">Review sentiment</h1>
+        <form action="/run" method = "POST">
+            <!-- <h2 class="subtitle">Review</h2>
+            <input class="input" type = "text" name = "review" placeholder="Put your review here"/> -->
 
-</form>
+            <div class="field">
+                <label class="label">Review</label>
+                <div class="control">
+                  <input class="input" type="text" name = "review" placeholder="Put your review here...">
+                </div>
+              </div>
+
+           <!-- <button class="button" />
+                <a href="/">Go back</a>
+            </button>
+            <div><input class="button" type = "submit" value = "Analyze" /></div> -->
+
+            <div class="field is-grouped">
+                <div class="control">
+                  <button class="button is-link" type="submit">Submit</button>
+                </div>
+                <div class="control">
+                  <button class="button is-link is-light">Cancel</button>
+                </div>
+              </div>
+
+            {% block content %}
+                {% if result %}
+                    <span class="subtitle">Result: </span>
+                {% endif %}
+                {% if result == "positive" %}
+                    <span style="color:green">{{ result }}</span>
+                {% endif %}
+        
+                {% if result == "negative" %}
+                    <span style="color:red">{{ result }}</span>
+                {% endif %}
+        
+                {% if result == "neutral" %}
+                    <span style="color:orange">{{ result }}</span>
+                {% endif %}
+            {% endblock content %}
+            
+        </form>
+      </div>
+    
+</body>
+</html>
