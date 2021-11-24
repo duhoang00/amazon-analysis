@@ -32,15 +32,7 @@
         <div class="column">
           {% block content %} 
           <label class="label">Result: </label> 
-          {% if result == "Positive" %}
-          <input class="input" type="text" style="color: green" value={{ result }}></input>
-          {% endif %} 
-          {% if result == "Negative" %}
-          <input class="input" type="text" style="color: red" value={{ result }}></div>
-          {% endif %} 
-          {% if result == "Neutral" %}
-          <input class="input" type="text" style="color: orange" value={{ result }}></input>
-          {% endif %} 
+            <div class="{{tag}}">{{ result }}</div>
           {% endblock content %}
         </div>
       </div>

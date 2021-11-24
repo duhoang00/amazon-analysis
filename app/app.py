@@ -34,11 +34,14 @@ def data():
 
         sentiment = randomforest.predict(tfidf)
         result = "Positive"
+        tag = "tag is-large is-success"
         if (sentiment == 0):
             result = "Neutral"
+            tag = "tag is-large is-warning"
         if (sentiment == -1):
             result = "Negative"
+            tag = "tag is-large is-danger"
 
         print(result)
 
-        return render_template('index.html', result=result)
+        return render_template('index.html', result=result, tag=tag)
