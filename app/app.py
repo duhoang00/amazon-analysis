@@ -13,7 +13,7 @@ app = Flask(__name__)
 
 
 @app.route("/")
-def hello_world():
+def home():
     return render_template('index.html')
 
 
@@ -33,10 +33,12 @@ def data():
             loaded_vec.fit_transform(np.array(review)))
 
         sentiment = randomforest.predict(tfidf)
-        result = "positive"
+        result = "Positive"
         if (sentiment == 0):
-            result = "neutral"
+            result = "Neutral"
         if (sentiment == -1):
-            result = "negative"
+            result = "Negative"
+
+        print(result)
 
         return render_template('index.html', result=result)

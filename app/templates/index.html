@@ -1,59 +1,49 @@
-
-
-
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>Review sentiment</title>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css"
-    </head>
-<body>
-    <div class="box " style="margin: 10%">
-        <h1 class="title">Review sentiment</h1>
-        <form action="/run" method = "POST">
-            <!-- <h2 class="subtitle">Review</h2>
-            <input class="input" type = "text" name = "review" placeholder="Put your review here"/> -->
-
+  <head>
+    <title>Review sentiment</title>
+    <link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css"
+  </head>
+  <body>
+    <div class="box" style="margin: 10%">
+      <h1 class="title">Review sentiment</h1>
+      <div class="columns">
+        <div class="column">
+          <form action="/run" method="POST">
             <div class="field">
-                <label class="label">Review</label>
-                <div class="control">
-                  <input class="input" type="text" name = "review" placeholder="Put your review here...">
-                </div>
+              <label class="label">Review</label>
+              <div class="control">
+                <input
+                  class="input"
+                  type="text"
+                  name="review"
+                  placeholder="Put your review here..."
+                />
               </div>
-
-           <!-- <button class="button" />
-                <a href="/">Go back</a>
-            </button>
-            <div><input class="button" type = "submit" value = "Analyze" /></div> -->
-
-            <div class="field is-grouped">
-                <div class="control">
-                  <button class="button is-link" type="submit">Submit</button>
-                </div>
-                <div class="control">
-                  <button class="button is-link is-light">Cancel</button>
-                </div>
+            </div>
+            <div class="field">
+              <div class="control">
+                <button class="button is-link" type="submit">Analyze</button>
               </div>
-
-            {% block content %}
-                {% if result %}
-                    <span class="subtitle">Result: </span>
-                {% endif %}
-                {% if result == "positive" %}
-                    <span style="color:green">{{ result }}</span>
-                {% endif %}
-        
-                {% if result == "negative" %}
-                    <span style="color:red">{{ result }}</span>
-                {% endif %}
-        
-                {% if result == "neutral" %}
-                    <span style="color:orange">{{ result }}</span>
-                {% endif %}
-            {% endblock content %}
-            
-        </form>
+            </div>
+          </form>
+        </div>
+        <div class="column">
+          {% block content %} 
+          <label class="label">Result: </label> 
+          {% if result == "Positive" %}
+          <input class="input" type="text" style="color: green" value={{ result }}></input>
+          {% endif %} 
+          {% if result == "Negative" %}
+          <input class="input" type="text" style="color: red" value={{ result }}></div>
+          {% endif %} 
+          {% if result == "Neutral" %}
+          <input class="input" type="text" style="color: orange" value={{ result }}></input>
+          {% endif %} 
+          {% endblock content %}
+        </div>
       </div>
-    
-</body>
+    </div>
+  </body>
 </html>
