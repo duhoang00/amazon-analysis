@@ -42,6 +42,4 @@ def data():
             result = "Negative"
             tag = "tag is-large is-danger"
 
-        print(result)
-
         return render_template('index.html', result=result, tag=tag)
