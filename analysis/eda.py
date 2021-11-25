@@ -58,7 +58,7 @@ plt.savefig("./eda-figure/Figure_scatter_rating_price.png")
 plt.figure(figsize=(10, 10), dpi=300)
 plt.scatter(x="review.rating", y="product.price.savings_amount",
             data=df)
-plt.title("Review rating and product price")
+plt.title("Review rating and saving amount")
 plt.xlabel("Rating")
 plt.ylabel("Saving amount")
 plt.savefig("./eda-figure/Figure_scatter_rating_saving_amount.png")
